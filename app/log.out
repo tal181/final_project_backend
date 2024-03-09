@@ -1,0 +1,2 @@
+0    [main] DEBUG org.apache.htrace.core.Tracer  - sampler.classes = ; loaded no samplers
+3    [main] DEBUG org.apache.htrace.core.Tracer  - span.receiver.classes = ; loaded no span receivers
