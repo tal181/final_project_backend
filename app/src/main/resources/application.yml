@@ -1,0 +1,48 @@
+# To disable Open API UI endpoints in PROD, uncomment the following in PROD profile
+# springdoc:
+#  api-docs:
+#   enabled: false
+#  swagger-ui:
+#   enabled: false
+
+jsk:
+  lastmile:
+    enabled: false
+  mesh:
+    enabled: true
+
+health:
+  config:
+    enabled: false
+
+# Configuration of TLS Termination in service layer
+server:
+  max-http-header-size: 32KB
+  port: 8443 # Set it to 8080 or some other value, if running in clear text mode
+  include-debug-info: false
+  error:
+    include-message: always # Might leak info if exceptions are sent as part of the error message
+  ssl:
+    enabled: true # Set to false to run in clear text mode, be sure to set 'service_layer_tls_termination' to no in entry.sh
+    enabled-protocols: TLSv1.2
+    key-alias: tomcat
+    key-store: /app/tmp/keystore.pkcs12
+    key-store-password: ${TLS_KEYSTORE_PASSWORD}
+    key-store-type: PKCS12
+  tomcat:
+    relaxed-query-chars: '|,{,},[,]' # To support the json-api filter: https://stackoverflow.com/questions/46251131/invalid-character-found-in-the-request-target-in-spring-boot
+
+management:
+  server:
+    port: 8490
+    ssl:
+      enabled: true
+      enabled-protocols: TLSv1.2
+      key-alias: tomcat
+      key-store: classpath:management.jks
+      key-store-password: password
+      key-store-type: jks
+  endpoints:
+    web:
+      exposure:
+        include: ["health","info","prometheus"]

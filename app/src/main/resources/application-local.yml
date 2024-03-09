@@ -1,0 +1,25 @@
+# Configuration of TLS Termination in service layer
+server:
+  max-http-header-size: 32KB
+  port: 9001 # Set it to 8080 or some other value, if running in clear text mode
+  include-debug-info: false
+  error:
+    include-message: always # Might leak info if exceptions are sent as part of the error message
+  ssl:
+    enabled: false # Set to false to run in clear text mode, be sure to set 'service_layer_tls_termination' to no in entry.sh
+    enabled-protocols: TLSv1.2
+    key-alias: tomcat
+    key-store: /app/tmp/keystore.pkcs12
+    key-store-password: password
+    key-store-type: PKCS12
+
+management:
+  server:
+    ssl:
+      enabled-protocols: TLSv1.2
+
+jsk:
+  lastmile:
+    enabled: false
+  mesh:
+    enabled: true
