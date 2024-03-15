@@ -85,13 +85,11 @@
             <version>2.12.12</version>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>com.project</groupId>-->
-<!--            <artifactId>final_project</artifactId>-->
-<!--            <version>local</version>-->
-<!--            <scope>system</scope>-->
-<!--            <systemPath>/Users/tsharon/IdeaProjects/final_project_backend/app/src/main/resources</systemPath>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>com.project</groupId>
+            <artifactId>final_project_2.12</artifactId>
+            <version>local</version>
+        </dependency>
 
     </dependencies>
 </project>

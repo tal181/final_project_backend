@@ -13,7 +13,6 @@
 
     <modules>
         <module>app</module>
-        <module>package</module>
     </modules>
     
     <build>

@@ -23,7 +23,7 @@ server:
   error:
     include-message: always # Might leak info if exceptions are sent as part of the error message
   ssl:
-    enabled: true # Set to false to run in clear text mode, be sure to set 'service_layer_tls_termination' to no in entry.sh
+    enabled: false # Set to false to run in clear text mode, be sure to set 'service_layer_tls_termination' to no in entry.sh
     enabled-protocols: TLSv1.2
     key-alias: tomcat
     key-store: /app/tmp/keystore.pkcs12

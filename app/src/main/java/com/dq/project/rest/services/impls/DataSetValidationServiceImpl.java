@@ -23,6 +23,8 @@ import scala.collection.JavaConverters;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,6 +100,8 @@ public class DataSetValidationServiceImpl implements DataSetValidationService {
         List<CheckResult> javaChecks = scala.collection.JavaConverters.seqAsJavaList(checks);
 
         List<JavaCheckResult> javaChecksRes = javaChecks.stream().map(check -> JavaCheckResult.builder().checkName(check.checkName()).value(check.status()).build()).collect(Collectors.toList());
+
+        Collections.sort(javaChecksRes, Comparator.comparing(JavaCheckResult::getCheckName));
 
         Duration duration = Duration.between(from, to);
 
