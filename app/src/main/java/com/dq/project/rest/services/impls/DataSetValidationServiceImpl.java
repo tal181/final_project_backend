@@ -57,14 +57,22 @@ public class DataSetValidationServiceImpl implements DataSetValidationService {
 
             if(dataSetValidation.getStrategy().equals("all")) {
                 ValidationResult sql = createStrategyResponse(dataSetValidation, "SQL");
+                sql.getChecks().add(addMissingCheck());
+                Collections.sort(sql.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
+
                 ValidationResult dqdf = createStrategyResponse(dataSetValidation, "DQDF");
+                Collections.sort(dqdf.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
+
                 ValidationResult deequ = createStrategyResponse(dataSetValidation, "Deequ");
+                Collections.sort(deequ.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
 
                return  ValidationResponse.builder().sql(sql).dqdf(dqdf).deequ(deequ).build();
 
             }
             else if(dataSetValidation.getStrategy().equals("SQL")){
-                return ValidationResponse.builder().sql(createStrategyResponse(dataSetValidation, "SQL")).build();
+                ValidationResult sql = createStrategyResponse(dataSetValidation, "SQL");
+                sql.getChecks().add(addMissingCheck());
+                return ValidationResponse.builder().sql(sql).build();
             }
             else if(dataSetValidation.getStrategy().equals("DQDF")){
                 return ValidationResponse.builder().dqdf(createStrategyResponse(dataSetValidation, "DQDF")).build();
@@ -84,6 +92,9 @@ public class DataSetValidationServiceImpl implements DataSetValidationService {
         }
     }
 
+    private JavaCheckResult addMissingCheck() {
+        return JavaCheckResult.builder().checkName("No Duplicate column names").value("N/A").build();
+    }
     private ValidationResult createStrategyResponse(DataSetValidationRequest dataSetValidation, String strategy) {
         LocalDateTime from =  LocalDateTime.now();
 
@@ -99,9 +110,7 @@ public class DataSetValidationServiceImpl implements DataSetValidationService {
 
         List<CheckResult> javaChecks = scala.collection.JavaConverters.seqAsJavaList(checks);
 
-        List<JavaCheckResult> javaChecksRes = javaChecks.stream().map(check -> JavaCheckResult.builder().checkName(check.checkName()).value(check.status()).build()).collect(Collectors.toList());
-
-        Collections.sort(javaChecksRes, Comparator.comparing(JavaCheckResult::getCheckName));
+        List<JavaCheckResult> javaChecksRes = javaChecks.stream().map(check -> JavaCheckResult.builder().checkName(check.checkName()).value(Boolean.toString(check.status())).build()).collect(Collectors.toList());
 
         Duration duration = Duration.between(from, to);
 

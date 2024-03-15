@@ -8,5 +8,5 @@ import lombok.Data;
 @Builder
 public class JavaCheckResult {
     String checkName;
-    Boolean value;
+    String value;
 }
