@@ -22,17 +22,16 @@ import scala.collection.JavaConverters;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class DataSetValidationServiceImpl implements DataSetValidationService {
+    Map<String, StatusResult> tidToStatus = new HashMap<>();
+
     @Override
-    public List<SchemaColumn> getSchema(SchemaRequest schemaRequest){
+    public List<SchemaColumn> getSchema(SchemaRequest schemaRequest) {
 
         List<String> list = new ArrayList<>();
         list.add("--fileSchemaConfigPathArg");
@@ -50,37 +49,52 @@ public class DataSetValidationServiceImpl implements DataSetValidationService {
         return javaSchema.stream().map(column -> SchemaColumn.builder().columnName(column.column()).type(column.columnType()).build()).collect(Collectors.toList());
 
     }
+
+    @Override
+    public StatusResult getStatus(String tid) {
+        log.debug("status is " + tidToStatus.get(tid));
+        return tidToStatus.get(tid);
+    }
+
+    @Override
+    public String createTid() {
+        String uuid = UUID.randomUUID().toString();
+        StatusResult result = StatusResult.builder().sql("Running").deequ("PENDING").dqdf("PENDING").build();
+        tidToStatus.put(uuid, result);
+        return uuid;
+    }
+
     @Override
     public ValidationResponse validate(DataSetValidationRequest dataSetValidation) {
+        String tid = dataSetValidation.getTid();
         try {
             log.debug("data set validation model is " + dataSetValidation);
 
-            if(dataSetValidation.getStrategy().equals("all")) {
-                ValidationResult sql = createStrategyResponse(dataSetValidation, "SQL");
-                sql.getChecks().add(addMissingCheck());
-                Collections.sort(sql.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
+            StatusResult statusResult = tidToStatus.get(tid);
+            statusResult.setSql("Running");
+            tidToStatus.put(tid, statusResult);
 
-                ValidationResult dqdf = createStrategyResponse(dataSetValidation, "DQDF");
-                Collections.sort(dqdf.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
+            ValidationResult sql = createStrategyResponse(dataSetValidation, "SQL");
+            sql.getChecks().add(addMissingCheck());
+            Collections.sort(sql.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
+            statusResult.setSql("Finished");
+            tidToStatus.put(tid, statusResult);
 
-                ValidationResult deequ = createStrategyResponse(dataSetValidation, "Deequ");
-                Collections.sort(deequ.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
+            statusResult.setDqdf("Running");
+            tidToStatus.put(tid, statusResult);
+            ValidationResult dqdf = createStrategyResponse(dataSetValidation, "DQDF");
+            Collections.sort(dqdf.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
+            statusResult.setDqdf("Finished");
+            tidToStatus.put(tid, statusResult);
 
-               return  ValidationResponse.builder().sql(sql).dqdf(dqdf).deequ(deequ).build();
+            statusResult.setDeequ("Running");
+            tidToStatus.put(tid, statusResult);
+            ValidationResult deequ = createStrategyResponse(dataSetValidation, "Deequ");
+            Collections.sort(deequ.getChecks(), Comparator.comparing(JavaCheckResult::getCheckName));
+            statusResult.setDeequ("Finished");
+            tidToStatus.put(tid, statusResult);
 
-            }
-            else if(dataSetValidation.getStrategy().equals("SQL")){
-                ValidationResult sql = createStrategyResponse(dataSetValidation, "SQL");
-                sql.getChecks().add(addMissingCheck());
-                return ValidationResponse.builder().sql(sql).build();
-            }
-            else if(dataSetValidation.getStrategy().equals("DQDF")){
-                return ValidationResponse.builder().dqdf(createStrategyResponse(dataSetValidation, "DQDF")).build();
-            }
-            else{
-                return  ValidationResponse.builder().deequ(createStrategyResponse(dataSetValidation, "Deequ")).build();
-            }
-
+            return ValidationResponse.builder().sql(sql).deequ(deequ).dqdf(dqdf).build();
         } catch (UnSupportedDataTypeException e) {
             log.error("error " + e.getMessage());
             return null;
@@ -92,11 +106,13 @@ public class DataSetValidationServiceImpl implements DataSetValidationService {
         }
     }
 
+
     private JavaCheckResult addMissingCheck() {
         return JavaCheckResult.builder().checkName("No Duplicate column names").value("N/A").build();
     }
+
     private ValidationResult createStrategyResponse(DataSetValidationRequest dataSetValidation, String strategy) {
-        LocalDateTime from =  LocalDateTime.now();
+        LocalDateTime from = LocalDateTime.now();
 
         dataSetValidation.setStrategy(strategy);
         List<String> list = buildArgs(dataSetValidation);

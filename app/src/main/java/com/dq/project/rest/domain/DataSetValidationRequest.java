@@ -7,4 +7,5 @@ public class DataSetValidationRequest {
     String strategy;
     String dataSetPath;
     String schemaConfig;
+    String tid;
 }

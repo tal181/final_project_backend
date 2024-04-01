@@ -18,5 +18,9 @@ public interface DataSetValidationService {
     ValidationResponse validate(DataSetValidationRequest dataSetValidation);
 
     List<SchemaColumn> getSchema(SchemaRequest schemaRequest);
+
+    StatusResult getStatus(String tid);
+
+    String createTid();
     
 }
